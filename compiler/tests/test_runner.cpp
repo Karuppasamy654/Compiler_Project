@@ -176,9 +176,40 @@ void test21_EquivalenceVerification() {
     assert(res["verification"]["equivalent"].get<bool>());
 }
 
+void test22_KMapSolver() {
+    std::cout << "[TEST 22] K-Map Solver..." << std::endl;
+    logicopt::Compiler compiler;
+    auto res = compiler.compile("INPUT A, B, C\nOUTPUT Y\n\nY = (A AND B) OR NOT C");
+    assert(res["success"].get<bool>());
+    assert(res.contains("kmap"));
+    assert(res["kmap"]["Y"]["supported"].get<bool>());
+    assert(res["kmap"]["Y"]["numVariables"].get<int>() == 3);
+}
+
+void test23_TechnologyMapping() {
+    std::cout << "[TEST 23] Technology Mapping (NAND/NOR)..." << std::endl;
+    logicopt::Compiler compiler;
+    auto res = compiler.compile("INPUT A, B\nOUTPUT Y\n\nY = A OR B");
+    assert(res["success"].get<bool>());
+    assert(res.contains("nandCircuit"));
+    assert(res.contains("norCircuit"));
+    assert(res["nandCircuit"]["gates"].size() > 0);
+    assert(res["norCircuit"]["gates"].size() > 0);
+}
+
+void test24_CriticalPathAnalysis() {
+    std::cout << "[TEST 24] Critical Path Analysis..." << std::endl;
+    logicopt::Compiler compiler;
+    auto res = compiler.compile("INPUT A, B, C\nOUTPUT Y\n\nY = (A AND B) OR C");
+    assert(res["success"].get<bool>());
+    assert(res.contains("criticalPath"));
+    assert(res["criticalPath"]["estimatedDelayNs"].get<double>() > 0.0);
+    assert(res["criticalPath"]["criticalPathGates"].size() > 0);
+}
+
 int main() {
     std::cout << "========================================\n";
-    std::cout << "  LOGICOPT C++ 21-SUITE COMPILER TESTS  \n";
+    std::cout << "  LOGICOPT C++ 24-SUITE COMPILER TESTS  \n";
     std::cout << "========================================\n";
 
     try {
@@ -203,8 +234,11 @@ int main() {
         test19_CircuitGeneration();
         test20_TruthTableGeneration();
         test21_EquivalenceVerification();
+        test22_KMapSolver();
+        test23_TechnologyMapping();
+        test24_CriticalPathAnalysis();
 
-        std::cout << "\nALL 21 C++ COMPILER TEST SUITES PASSED SUCCESSFULLY! ✓\n";
+        std::cout << "\nALL 24 C++ COMPILER TEST SUITES PASSED SUCCESSFULLY! ✓\n";
         return 0;
     } catch (const std::exception& ex) {
         std::cerr << "\nTest failed with exception: " << ex.what() << std::endl;

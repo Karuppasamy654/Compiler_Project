@@ -16,6 +16,9 @@ g++ -std=c++17 -Iinclude -O2 ^
     src/truth_table.cpp ^
     src/verifier.cpp ^
     src/metrics.cpp ^
+    src/kmap.cpp ^
+    src/technology_mapper.cpp ^
+    src/critical_path.cpp ^
     src/compiler.cpp ^
     src/main.cpp ^
     -o bin/logicopt_compiler.exe
@@ -40,6 +43,9 @@ g++ -std=c++17 -Iinclude -O2 ^
     src/truth_table.cpp ^
     src/verifier.cpp ^
     src/metrics.cpp ^
+    src/kmap.cpp ^
+    src/technology_mapper.cpp ^
+    src/critical_path.cpp ^
     src/compiler.cpp ^
     tests/test_runner.cpp ^
     -o bin/logicopt_tests.exe

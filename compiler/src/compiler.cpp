@@ -8,6 +8,9 @@
 #include "truth_table.h"
 #include "verifier.h"
 #include "metrics.h"
+#include "kmap.h"
+#include "technology_mapper.h"
+#include "critical_path.h"
 
 namespace logicopt {
 
@@ -100,23 +103,42 @@ nlohmann::json Compiler::compile(const std::string& sourceCode) {
         optimizationsJson.push_back(step.toJson());
     }
 
-    // 6. Circuit Synthesis
+    // 6. Technology Mapping (NAND-Only and NOR-Only Synthesis)
+    TechnologyMapper techMapper;
+    std::vector<IRInstruction> nandIr = techMapper.mapToTechnology(optimizedIr, symbolTable, TechTarget::NAND_ONLY);
+    std::vector<IRInstruction> norIr = techMapper.mapToTechnology(optimizedIr, symbolTable, TechTarget::NOR_ONLY);
+
+    // 7. Circuit Synthesis
     CircuitGenerator circuitGen;
     CircuitGraph originalCircuit = circuitGen.generate(originalIr, symbolTable);
     CircuitGraph optimizedCircuit = circuitGen.generate(optimizedIr, symbolTable);
+    CircuitGraph nandCircuit = circuitGen.generate(nandIr, symbolTable);
+    CircuitGraph norCircuit = circuitGen.generate(norIr, symbolTable);
 
-    // 7. Truth Table Evaluation
+    // 8. Critical Path & Delay Analysis
+    CriticalPathAnalyzer cpAnalyzer;
+    CriticalPathAnalysis criticalPath = cpAnalyzer.analyze(optimizedCircuit);
+
+    // 9. Truth Table Evaluation
     TruthTableEvaluator ttEval(10);
     TruthTable truthTable = ttEval.evaluate(originalIr, symbolTable);
 
-    // 8. Equivalence Verification
+    // 10. Karnaugh Map (K-Map) Solver
+    KMapSolver kmapSolver;
+    auto kmaps = kmapSolver.solve(truthTable);
+    nlohmann::json kmapJson = nlohmann::json::object();
+    for (const auto& pair : kmaps) {
+        kmapJson[pair.first] = pair.second.toJson();
+    }
+
+    // 11. Equivalence Verification
     EquivalenceChecker verifier(10);
     EquivalenceResult verification = verifier.verify(originalIr, optimizedIr, symbolTable);
 
     std::vector<std::string> inOrder = truthTable.inputSignals;
     std::vector<std::string> outOrder = truthTable.outputSignals;
 
-    // 9. Metrics Calculation
+    // 12. Metrics Calculation
     MetricsCalculator metricsCalc;
     CompilerMetrics metrics = metricsCalc.calculateComparison(originalCircuit, optimizedCircuit);
 
@@ -129,6 +151,10 @@ nlohmann::json Compiler::compile(const std::string& sourceCode) {
         {"optimizedIr", optimizedIrJson},
         {"originalCircuit", originalCircuit.toJson()},
         {"optimizedCircuit", optimizedCircuit.toJson()},
+        {"nandCircuit", nandCircuit.toJson()},
+        {"norCircuit", norCircuit.toJson()},
+        {"criticalPath", criticalPath.toJson()},
+        {"kmap", kmapJson},
         {"truthTable", truthTable.toJson()},
         {"verification", verification.toJson(inOrder, outOrder)},
         {"metrics", metrics.toJson()},
@@ -139,3 +165,4 @@ nlohmann::json Compiler::compile(const std::string& sourceCode) {
 }
 
 } // namespace logicopt
+

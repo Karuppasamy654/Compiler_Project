@@ -16,6 +16,8 @@ import SymbolTableView from './components/SymbolTableView.jsx';
 import ErrorView from './components/ErrorView.jsx';
 import LanguageHelpPanel from './components/LanguageHelpPanel.jsx';
 import ResizableLayout from './components/ResizableLayout.jsx';
+import KMapView from './components/KMapView.jsx';
+import CriticalPathView from './components/CriticalPathView.jsx';
 import { evaluateCircuitSignals } from './utils/simulatorEvaluator.js';
 
 const DEFAULT_CODE = `INPUT A, B, C
@@ -32,7 +34,7 @@ export default function App() {
   const [backendHealthy, setBackendHealthy] = useState(false);
   const [result, setResult] = useState(null);
   const [activeTab, setActiveTab] = useState('truthTable');
-  const [circuitTab, setCircuitTab] = useState('original'); // 'original' | 'optimized'
+  const [circuitTab, setCircuitTab] = useState('original'); // 'original' | 'optimized' | 'nand' | 'nor'
 
   // Panel Collapsible States
   const [leftCollapsed, setLeftCollapsed] = useState(false);
@@ -156,6 +158,10 @@ export default function App() {
   // Active circuit selection based on toggle tab
   const activeCircuit = circuitTab === 'optimized'
     ? result?.optimizedCircuit
+    : circuitTab === 'nand'
+    ? result?.nandCircuit
+    : circuitTab === 'nor'
+    ? result?.norCircuit
     : result?.originalCircuit;
 
   const activeIr = circuitTab === 'optimized'
@@ -247,6 +253,8 @@ export default function App() {
 
   const tabs = [
     { id: 'truthTable', label: 'Truth Table' },
+    { id: 'kmap', label: 'K-Map Minimization' },
+    { id: 'timing', label: 'Timing & Critical Path' },
     { id: 'verification', label: 'Equivalence Verification' },
     { id: 'metrics', label: 'Circuit Metrics' },
     { id: 'optimizations', label: 'Optimization Pass Log' },
@@ -345,22 +353,36 @@ export default function App() {
           </span>
         </div>
 
-        {/* Original vs Optimized Circuit Toggle Switch */}
+        {/* Technology Mapping & Optimization Circuit Mode Selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ display: 'flex', background: 'var(--bg-darker)', borderRadius: '6px', padding: '2px' }}>
             <button
               className={`btn ${circuitTab === 'original' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setCircuitTab('original')}
-              style={{ padding: '0.2rem 0.65rem', fontSize: '0.75rem' }}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem' }}
             >
-              Original Circuit
+              Original
             </button>
             <button
               className={`btn ${circuitTab === 'optimized' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setCircuitTab('optimized')}
-              style={{ padding: '0.2rem 0.65rem', fontSize: '0.75rem' }}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem' }}
             >
-              Optimized Circuit
+              Optimized
+            </button>
+            <button
+              className={`btn ${circuitTab === 'nand' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setCircuitTab('nand')}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem' }}
+            >
+              NAND-Only
+            </button>
+            <button
+              className={`btn ${circuitTab === 'nor' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setCircuitTab('nor')}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem' }}
+            >
+              NOR-Only
             </button>
           </div>
 
@@ -381,7 +403,12 @@ export default function App() {
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <CircuitSimulator
           circuit={result?.success ? activeCircuit : null}
-          title={circuitTab === 'optimized' ? "Optimized Digital Circuit" : "Original Synthesized Circuit"}
+          title={
+            circuitTab === 'optimized' ? "Optimized Digital Circuit" :
+            circuitTab === 'nand' ? "NAND-Only Synthesized Netlist" :
+            circuitTab === 'nor' ? "NOR-Only Synthesized Netlist" :
+            "Original Synthesized Circuit"
+          }
           compilationFailed={result && !result.success}
           errorMessage={result?.errors?.[0]?.message}
           evaluatedSignals={evaluatedSignals}
@@ -391,7 +418,7 @@ export default function App() {
     </div>
   );
 
-  // Bottom Content: Truth Table, Verification, Metrics, Optimization Log, Diagnostics Tabs
+  // Bottom Content: Truth Table, K-Map, Timing, Verification, Metrics, Optimization Log, Diagnostics Tabs
   const bottomContent = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Bottom Panel Header Tabs & Controls */}
@@ -458,6 +485,12 @@ export default function App() {
             activeInputValuation={inputValuation}
             onSelectRow={(rowInputs) => setInputValuation(rowInputs)}
           />
+        )}
+        {activeTab === 'kmap' && (
+          <KMapView kmap={result?.kmap} />
+        )}
+        {activeTab === 'timing' && (
+          <CriticalPathView criticalPath={result?.criticalPath} />
         )}
         {activeTab === 'verification' && (
           <VerificationView verification={result?.verification} />

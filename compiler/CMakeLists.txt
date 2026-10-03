@@ -19,6 +19,9 @@ set(COMPILER_SOURCES
     src/truth_table.cpp
     src/verifier.cpp
     src/metrics.cpp
+    src/kmap.cpp
+    src/technology_mapper.cpp
+    src/critical_path.cpp
     src/compiler.cpp
 )
 
