@@ -52,7 +52,9 @@ export default function MetricsView({ metrics }) {
             </span>
             <TrendingDown size={22} color="var(--accent-purple)" />
           </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{metrics.gateReduction} Gates Eliminated</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            {metrics.gateReduction > 0 ? `${metrics.gateReduction} Gates Eliminated` : 'No structural optimization found'}
+          </span>
         </div>
 
         <div style={cardStyle}>
@@ -63,9 +65,29 @@ export default function MetricsView({ metrics }) {
             </span>
             <Layers size={22} color="var(--accent-yellow)" />
           </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{metrics.depthReduction} Levels Saved</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            {metrics.depthReduction > 0 ? `${metrics.depthReduction} Levels Saved` : 'Original structure maintained'}
+          </span>
         </div>
       </div>
+
+      {metrics.gateReduction === 0 && (
+        <div style={{
+          background: 'rgba(56, 189, 248, 0.1)',
+          border: '1px solid rgba(56, 189, 248, 0.3)',
+          borderRadius: '8px',
+          padding: '0.8rem 1.25rem',
+          marginBottom: '1.5rem',
+          color: 'var(--accent-blue)',
+          fontSize: '0.85rem',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>Notice: No structural optimization found. The circuit is already in minimal optimal form.</span>
+        </div>
+      )}
 
       {/* Detailed Gate Comparison Table */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', overflow: 'hidden' }}>

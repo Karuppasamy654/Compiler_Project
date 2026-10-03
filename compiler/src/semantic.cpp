@@ -214,7 +214,15 @@ void SemanticAnalyzer::checkMissingAndUnused() {
                 sym.column
             });
         }
-        if (sym.kind == SymbolKind::WIRE && !sym.used) {
+        if (sym.kind == SymbolKind::WIRE && !sym.assigned && sym.used) {
+            errors_.push_back({
+                "SemanticError",
+                "Wire signal '" + sym.name + "' is used in an expression but never assigned a value.",
+                sym.line,
+                sym.column
+            });
+        }
+        if (sym.kind == SymbolKind::WIRE && !sym.used && sym.assigned) {
             // Implicit or explicit unused wires generate warnings
             warnings_.push_back({
                 "Wire '" + sym.name + "' is declared/created but never used in any downstream output expression.",
