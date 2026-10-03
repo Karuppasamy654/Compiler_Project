@@ -1,0 +1,4 @@
+input a, b;
+output y;
+
+y = a AND b;

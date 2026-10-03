@@ -1,0 +1,9 @@
+input d0, d1, s;
+output y;
+
+wire s_not, term0, term1;
+
+s_not = NOT s;
+term0 = d0 AND s_not;
+term1 = d1 AND s;
+y = term0 OR term1;

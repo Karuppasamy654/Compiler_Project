@@ -1,116 +1,108 @@
-# HelpNet 🤝
+# LogicOpt — C++17 Compiler-Based Boolean Circuit Optimization & Synthesis Platform
 
-HelpNet is a community-powered peer-to-peer assistance platform. Residents can post local help requests, which are matched with skilled helpers in their neighborhood. Once a helper accepts, a secure real-time chat room opens up to coordinate details, and the seeker can review the assistance once complete.
-
-## Key Features
-
-- **Progressive Signup Flow**: Multi-step register forms to set up account details, select matching skills, locate neighborhoods, and upload profile pictures.
-- **Dynamic Helper Matching**: Scans user profiles matching requested categories, excluding seekers, sorted by average rating, and alerts them in real-time.
-- **Supabase Real-time Event Streaming**: Immediate browser alerts (toasters) and active chat message updates using Supabase's high-speed WebSocket broadcast channels.
-- **Mongoose / MongoDB Atlas Data Hub**: Full database consistency with indexes for performance optimization.
-- **NextAuth.js v5 Credentials Authentication**: Fast, secure login utilizing the Credentials provider and JWT session management.
-- **Unsigned Cloudinary Avatar Uploader**: Handles avatar image file uploads via a secure server-side REST API proxy, with a generated-initials fallback if Cloudinary is not configured.
-- **Request Expiration sweeps**: Automatic cron job that expires pending requests older than 24 hours.
+**LogicOpt** is a production-quality academic compiler platform that translates a custom Boolean Domain-Specific Language (DSL) into optimized digital logic circuits while exhaustively verifying functional equivalence.
 
 ---
 
-## Tech Stack
+## 🚀 Key Features
 
-- **Framework**: [Next.js 14 (App Router)](https://nextjs.org)
-- **Database**: [MongoDB Atlas](https://www.mongodb.com/atlas/database) via [Mongoose](https://mongoosejs.com)
-- **Auth**: [NextAuth.js v5 (Auth.js)](https://authjs.dev)
-- **Real-time WebSockets**: [Supabase Realtime (Broadcast)](https://supabase.com/docs/guides/realtime)
-- **File Storage**: [Cloudinary](https://cloudinary.com) (Server-side REST uploader)
-- **Styling**: Tailwind CSS & Vanilla CSS
+* **Real C++17 Compiler Core**:
+  * **Lexical Analyzer**: Tokenizes input with line/column tracking.
+  * **Recursive-Descent Parser**: Builds an Abstract Syntax Tree (AST) with precedence (`NOT` > `AND`/`NAND` > `XOR`/`XNOR` > `OR`/`NOR`).
+  * **Symbol Table & Semantic Analyzer**: Scope checking, type checking, signal usage validation, and DFS-based **Circular Dependency Detection**.
+  * **Intermediate Representation (IR)**: Three-Address Code (TAC) generation.
+  * **Iterative Boolean Optimizer**:
+    * Constant Folding (`a AND 0 → 0`, `a OR 1 → 1`)
+    * Identity Laws (`a AND 1 → a`, `a OR 0 → a`)
+    * Idempotent Laws (`a AND a → a`, `a OR a → a`)
+    * Complement Laws (`a AND NOT a → 0`, `a OR NOT a → 1`)
+    * Double Negation (`NOT(NOT(a)) → a`)
+    * XOR / XNOR / NAND / NOR Simplifications
+    * Common Subexpression Elimination (CSE)
+    * Constant Propagation
+    * Dead Logic Elimination
+  * **Circuit Synthesis Engine**: Generates gate graph, computes logical circuit depth via topological sorting.
+  * **Exhaustive Verification & Truth Table Engine**: Evaluates original vs. optimized circuits and verifies functional equivalence.
+* **FastAPI Backend Integration**: Safe subprocess execution of the C++ compiler.
+* **React Web IDE Interface**:
+  * Monaco Editor integration with custom syntax highlighting.
+  * Interactive Circuit Visualizer (zoom/pan/selection).
+  * Tabbed inspection: Tokens, AST, Symbol Table, IR, Optimized IR, Original/Optimized Circuits, Truth Table, Verification, Metrics, Optimization Log, Errors.
+  * Export options: Source code, Full JSON result, IR, Truth Table CSV, Verilog (.v).
 
 ---
 
-## Getting Started
+## 🛠️ Technology Stack
 
-### 1. Prerequisite Installations
+| Layer | Technology |
+| :--- | :--- |
+| **Compiler Core** | C++17, STL, `nlohmann/json` header, CMake / GCC |
+| **Backend Integration** | Python 3.14+, FastAPI, Pydantic, Subprocess |
+| **Frontend UI** | React 18, Vite, Monaco Editor, Lucide Icons |
 
-Ensure you have [Node.js](https://nodejs.org) and `npm` installed.
+---
+
+## ⚡ Quick Start & Build Instructions
+
+### 1. Build & Test the C++ Compiler
 
 ```bash
+cd compiler
+
+# Build using provided script (GCC/g++)
+build.bat
+
+# Run automated C++ unit tests
+bin\logicopt_tests.exe
+```
+
+Or using CMake:
+
+```bash
+cd compiler
+cmake -B build
+cmake --build build
+```
+
+### 2. Run the FastAPI Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+python main.py
+```
+
+Backend will start at `http://localhost:8000`.
+
+### 3. Run the React Web Interface
+
+```bash
+cd frontend
 npm install
-```
-
-### 2. Environment Configurations
-
-Create a `.env.local` file in the root of your project and configure the keys based on `.env.example`:
-
-```env
-# MongoDB Connection URI (Atlas cluster)
-MONGODB_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/helpnet
-
-# NextAuth Configurations
-# Generate a secret: `openssl rand -base64 32`
-NEXTAUTH_SECRET=your_32_character_secret_key
-NEXTAUTH_URL=http://localhost:3000
-
-# Supabase Configurations (Realtime WebSockets)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_public_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-
-# Cloudinary (Unsigned Preset Uploader)
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_UPLOAD_PRESET=helpnet_avatars
-
-# Cron Sweeper Secret
-CRON_SECRET=your_cron_endpoint_secret
-```
-
-### 3. Setting Up Supabase Realtime Broadcast
-
-HelpNet uses Supabase Realtime Broadcast channels. No database tables are required in Supabase.
-1. Create a free project at [Supabase](https://supabase.com).
-2. Go to **Project Settings &gt; API** to copy the URL, Anon key, and Service Role key.
-3. Verify that Realtime is enabled in your Supabase dashboard settings.
-
-### 4. Setting Up Cloudinary Unsigned Uploads
-
-1. Create a free account at [Cloudinary](https://cloudinary.com).
-2. Go to **Settings &gt; Upload** and scroll down to **Upload presets**.
-3. Create a new upload preset:
-   - Name it exactly: `helpnet_avatars` (as configured in `.env.local`).
-   - Set the Mode to **Unsigned**.
-   - Set the Folder name or upload format settings as desired.
-   - Save the configuration.
-
----
-
-## Running Locally
-
-To run the development server:
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your web browser.
+Frontend will start at `http://localhost:5173`.
 
 ---
 
-## Request Expiration Cron Job
+## 📝 LogicOpt DSL Example
 
-Pending requests expire automatically after 24 hours. The sweep cron job is configured at `/api/cron/expire-requests` and is protected with an `Authorization: Bearer <CRON_SECRET>` header.
+```text
+input a, b, cin;
+output sum, cout;
 
-To trigger the sweep manually, send a GET request:
+wire axorb;
 
-```bash
-curl -X GET http://localhost:3000/api/cron/expire-requests \
-  -H "Authorization: Bearer your_cron_endpoint_secret"
+axorb = a XOR b;
+sum = axorb XOR cin;
+cout = (a AND b) OR (axorb AND cin);
 ```
-
-When deploying to Vercel, the cron schedule will automatically run hourly as defined in `vercel.json`.
 
 ---
 
-## Code Quality Check (Production build)
+## 🧪 Verification & Academic Integrity
 
-Verify the build process compiled correctly:
-
-```bash
-npm run build
-```
+The project strictly abides by compiler design principles:
+- **Zero hardcoded compiler outputs or fake data**.
+- All ASTs, IRs, gate graphs, truth tables, metrics, and equivalence check results are computed live by the C++17 compiler binary.

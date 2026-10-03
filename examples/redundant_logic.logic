@@ -1,0 +1,9 @@
+input a, b;
+output y1, y2;
+
+wire t1, t2;
+
+t1 = NOT(NOT(a));
+t2 = b OR 0;
+y1 = t1 AND 1;
+y2 = t2 AND NOT(b);

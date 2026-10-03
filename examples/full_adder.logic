@@ -1,0 +1,8 @@
+input a, b, cin;
+output sum, cout;
+
+wire axorb;
+
+axorb = a XOR b;
+sum = axorb XOR cin;
+cout = (a AND b) OR (axorb AND cin);
